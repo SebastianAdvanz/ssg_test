@@ -1,91 +1,54 @@
-import Image from 'next/image'
-import { Inter } from 'next/font/google'
-import styles from './page.module.css'
+import { Product } from "@/types";
+import Image from "next/image";
+import Link from "next/link";
 
-const inter = Inter({ subsets: ['latin'] })
+const consumerKey = "ck_2b7988b3f4e1934dbba9b0e25aeec3de9c2f297c";
+const consumerSecret = "cs_4b35e2e31fd05ed966f3b018e406c25ef2f25f8f";
 
-export default function Home() {
-  return (
-    <main className={styles.main}>
-      <div className={styles.description}>
-        <p>
-          Get started by editing&nbsp;
-          <code className={styles.code}>src/app/page.tsx</code>
-        </p>
-        <div>
-          <a
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{' '}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className={styles.vercelLogo}
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
-        </div>
-      </div>
+const root = "https://internaltest0.advanz.no";
+const API_route = "/wp-json/wc/v3";
+const productsRoute = "/products";
+const url = `${root}${API_route}${productsRoute}`;
 
-      <div className={styles.center}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-        <div className={styles.thirteen}>
-          <Image src="/thirteen.svg" alt="13" width={40} height={31} priority />
-        </div>
-      </div>
+const options = {
+  next: { revalidate: 60 },
+	method: "GET",
+	headers: {
+		Authorization: `Basic ${Buffer.from(
+			`${consumerKey}:${consumerSecret}`
+		).toString("base64")}`,
+	}
+};
 
-      <div className={styles.grid}>
-        <a
-          href="https://beta.nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={inter.className}>
-            Docs <span>-&gt;</span>
-          </h2>
-          <p className={inter.className}>
-            Find in-depth information about Next.js features and API.
-          </p>
-        </a>
+async function getProducts() {
+	const response = await fetch(url, options);
+	const data = await response.json();
+	return data as Product[];
+}
 
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={inter.className}>
-            Templates <span>-&gt;</span>
-          </h2>
-          <p className={inter.className}>Explore the Next.js 13 playground.</p>
-        </a>
+export default async function Home() {
+	const products = await getProducts();
 
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={inter.className}>
-            Deploy <span>-&gt;</span>
-          </h2>
-          <p className={inter.className}>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
-    </main>
-  )
+	return (
+		<main>
+			{products.map((product) => {
+				return (
+					<div key={product.id}>
+						<Link href={`/products/${product.id}`}>
+							<h1>
+								{product.name}
+								<Image
+									src={product.images[0].src}
+									alt={product.name}
+									width={50}
+									height={50}
+								/>
+							</h1>
+							<h2>{product.id}</h2>
+						</Link>
+					</div>
+				);
+			})}
+		</main>
+	);
 }
